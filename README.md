@@ -1,5 +1,5 @@
 # circuit_solver
-MATLAB code that finds currents and potential differences in any AC/DC circuit with difference of potential sources.
+MATLAB code that finds currents and potential differences in any AC/DC circuit with potential sources.
 
 # Program files:
 -  circuit.m: class for the circuit object. Allows the user to define a circuit, solve for its parameters and get the results.
