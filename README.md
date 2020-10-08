@@ -7,4 +7,4 @@ MATLAB code that finds currents and potential differences in any AC/DC circuit w
 
 # Examples:
 - Example 1: Simple DC circuit. Learn how to define the circuit geometry, potential sources and resistances, and get the results.
-- Example 2: AC circuit. See how impedance and phasors are inputed in the solver.
+- Example 2: AC circuit. See how impedance and phasors are given to the solver.
