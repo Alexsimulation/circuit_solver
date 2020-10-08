@@ -155,7 +155,7 @@ classdef circuit
             % Solve for currents I,  potential differences V and power P
             I = D^-1*d;
             V = Z*I+Source;
-            P = abs(Impedance).*abs(I).^2;
+            P = Impedance.*(abs(I).^2);
 
             % Return results
             varargout{1} = I;
