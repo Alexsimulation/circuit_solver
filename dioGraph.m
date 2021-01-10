@@ -56,7 +56,11 @@ classdef dioGraph
             if isempty(varargin)
                 H = digraph(e1,e2,1:length(e1));
             else
-                H = digraph(e1,e2,varargin{1});
+                if isempty(varargin{1})
+                    H = digraph(e1,e2,1:length(e1));
+                else
+                    H = digraph(e1,e2,varargin{1});
+                end
                 if length(varargin) > 1
                     is3D = varargin{2};
                 end

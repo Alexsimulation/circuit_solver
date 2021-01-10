@@ -8,6 +8,7 @@ classdef circuit
     %   circuit properties:
     %       Graph            - Graph containing the circuit geometry
     %       Impedance        - Vector of edges impedance
+    %       Diodes           - Presence of diodes in each edges
     %       Source           - Vector of edges voltage sources
     %       Currents         - Vector of edges currents
     %       PotentialDiffs   - Vector of edges potential differences 
@@ -26,13 +27,14 @@ classdef circuit
     properties
         Graph
         Impedance
+        Diodes
         Source
         Currents
         PotentialDiffs
         Powers
     end
     methods
-        function C = circuit(e1,e2,Impedance,Source)
+        function C = circuit(e1,e2,Impedance,Source,varargin)
             if size(Impedance,1) ~= length(Impedance)
                 Impedance = Impedance.';
             end
@@ -42,7 +44,13 @@ classdef circuit
             C.Graph = dioGraph(e1,e2);
             C.Impedance = Impedance;
             C.Source = Source;
-            [I,V,P] = circuit.solve_circuit(C.Graph,Impedance,Source);
+            if ~isempty(varargin)
+                C.Diodes = varargin{1};
+                [I,V,P] = circuit.solve_circuit_diodes(C.Graph,Impedance,Source,varargin{1});
+            else
+                C.Diodes = [];
+                [I,V,P] = circuit.solve_circuit(C.Graph,Impedance,Source);
+            end
             C.Currents = I;
             C.PotentialDiffs = V;
             C.Powers = P;
@@ -52,13 +60,17 @@ classdef circuit
             if isempty(varargin)
                 C.Graph.plot_graph();
             else
-                switch varargin{1}
-                    case 'I'
-                        u = abs(C.Currents);
-                    case 'V'
-                        u = abs(C.PotentialDiffs);
-                    case 'P'
-                        u = abs(C.Powers);
+                if isempty(varargin{1})
+                    u = 1:length(C.Currents);
+                else
+                    switch varargin{1}
+                        case 'I'
+                            u = abs(C.Currents);
+                        case 'V'
+                            u = abs(C.PotentialDiffs);
+                        case 'P'
+                            u = abs(C.Powers);
+                    end
                 end
                 is3D = false;
                 if length(varargin) > 1
@@ -116,7 +128,34 @@ classdef circuit
     
     methods(Static)
         
-        function [varargout] = solve_circuit(Graph,Impedance,Source)
+        function [I,V,P] = solve_circuit_diodes(Graph,Impedance,Source,Diodes)
+            
+            run = true;
+            while run
+                
+                % Get circuit properties
+                [I,V,P] = circuit.solve_circuit(Graph,Impedance,Source);
+                
+                % Check if diodes currents are forward or backward
+                k = 0;
+                for n = Diodes
+                    if (I(n) < 0)&&(abs(I(n)) > 1e-5)
+                        % If reverse current, add reaaly big resistance in
+                        % the edge of the diode
+                        Impedance(n) = 1e20;
+                        k = k + 1;
+                    end
+                end
+                
+                if k == 0
+                    run = false;
+                end
+                
+            end
+            
+        end
+        
+        function [I,V,P] = solve_circuit(Graph,Impedance,Source)
             %SOLVE_CIRCUIT solves an electrical circuit problem.
             %   I = SOLVE_CIRCUIT(Graph,Impedance,Source) finds the currents in a
             %   circuit. The circuit is described by a directed graph, an impedance
@@ -156,11 +195,7 @@ classdef circuit
             I = D^-1*d;
             V = Z*I+Source;
             P = Impedance.*(abs(I).^2);
-
-            % Return results
-            varargout{1} = I;
-            varargout{2} = V;
-            varargout{3} = P;
+            
         end
         
         function out = polar_form(A,varargin)
